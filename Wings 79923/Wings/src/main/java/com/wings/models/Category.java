@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 public class Category {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Id
-	@JsonIgnore
+//	@JsonIgnore
 	private int categoryId;
 	
 	@Column(unique = true)
