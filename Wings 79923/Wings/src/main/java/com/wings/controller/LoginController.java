@@ -1,5 +1,8 @@
 package com.wings.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,19 +28,23 @@ public class LoginController {
 	private AuthenticationManager authenticationManager;
 	
 	@PostMapping("/login")
-	public ResponseEntity<?> authenticateAndGetToken(@RequestBody AuthRequest authRequest){
+	public ResponseEntity<?> authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
 //		return null;
-		
+
 		try {
-	        authenticationManager.authenticate(
-	            new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-	        );
-	        String token = jwtService.generateToken(authRequest.getUsername());
-	        return ResponseEntity.ok(token);
-	    } catch (BadCredentialsException e) {
-	        return ResponseEntity.status(401).body("Invalid username or password");
-	    }
-		
+			authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+			String token = jwtService.generateToken(authRequest.getUsername());
+
+			// Wrap token in a JSON object
+			Map<String, String> response = new HashMap<>();
+			response.put("accessToken", token);
+
+			return ResponseEntity.ok(response);
+		} catch (BadCredentialsException e) {
+			return ResponseEntity.status(401).body("Invalid username or password");
+		}
+
 	}
 	
 }

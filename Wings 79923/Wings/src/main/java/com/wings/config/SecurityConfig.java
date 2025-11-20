@@ -40,6 +40,8 @@ public class SecurityConfig {
          .csrf(csrf -> csrf.disable())  // disable CSRF for APIs
          .authorizeHttpRequests(auth -> auth
              .requestMatchers("/api/public/**").permitAll() // allow login/signup and H2
+             .requestMatchers("/api/auth/consumer/**").hasAuthority("CONSUMER")
+             .requestMatchers("/api/auth/seller/**").hasAuthority("SELLER")
              .anyRequest().authenticated()
          )
          .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);

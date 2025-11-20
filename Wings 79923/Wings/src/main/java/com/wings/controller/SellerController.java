@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.wings.models.Category;
 import com.wings.models.Product;
@@ -39,16 +40,19 @@ public class SellerController {
 	
 	@PostMapping("/product")
 	public ResponseEntity<Object> postProduct(Principal principal, @RequestBody Product product){
-//		return null;
+
 		Category category = new Category();
 		category.setCategoryId(product.getCategory().getCategoryId());
 		category.setCategoryName(product.getCategory().getCategoryName());
 		categoryRepo.save(category);
 		
 		productRepo.save(product);
-		
-		// Build the URI for the new product
-	    URI location = URI.create("/product/" + product.getProductId());
+
+	    URI location = ServletUriComponentsBuilder
+	            .fromCurrentContextPath()
+	            .path("/product/{id}")
+	            .buildAndExpand(product.getProductId())
+	            .toUri();
 		
 		return ResponseEntity.created(location).body("Product Added Successfully");
 	
@@ -64,17 +68,18 @@ public class SellerController {
 	}
 	
 	@GetMapping("/product/{productId}")
-	public Optional<Product> getProduct(Principal principal, @PathVariable Integer productId){
-//		return null;
-//		Optional<Product> product = productRepo.findById(productId);
-//		if(product.isEmpty()) return ResponseEntity.badRequest().body("Product not found");
+	public ResponseEntity<Object> getProduct(Principal principal, @PathVariable Integer productId){
 		
 		Optional<UserInfo> user = userRepo.findByUsername(principal.getName()); //seller
-//		Optional<Product> product = productRepo.findById(productId);
-		
 		
 		//combo: user_id + product_id
-		return productRepo.findBySellerUserIdAndProductId(user.get().getUserId(), productId);
+		Optional<Product> product = productRepo.findBySellerUserIdAndProductId(user.get().getUserId(), productId);
+		
+		if (product.isPresent()) {
+		    return ResponseEntity.ok(product.get());
+		} else {
+		    return ResponseEntity.notFound().build();
+		}
 	}
 	
 	@PutMapping("/product")

@@ -101,7 +101,7 @@ public class ConsumerController {
 	public ResponseEntity<Object> getCart(Principal principal){
 		Optional<Cart> cart = cartRepo.findByUserUsername(principal.getName());
 		if (cart.isPresent()) {
-			return ResponseEntity.ok(cart.get().getCartProducts());
+			return ResponseEntity.ok(cart.get());
 		}
 		return ResponseEntity.notFound().build();
 	}
