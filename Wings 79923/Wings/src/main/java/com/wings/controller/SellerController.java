@@ -71,12 +71,12 @@ public class SellerController {
 	}
 	
 	@GetMapping("/product")
-	public List<Product> getAllProducts(Principal principal){
+	public ResponseEntity<Object> getAllProducts(Principal principal){
 //		return null;
 		
 		Optional<UserInfo> user = userRepo.findByUsername(principal.getName()); //seller
 		
-		return productRepo.findBySellerUserId(user.get().getUserId());
+		return ResponseEntity.ok(productRepo.findBySellerUserId(user.get().getUserId()));
 	}
 	
 	@GetMapping("/product/{productId}")
@@ -127,17 +127,17 @@ public class SellerController {
 	}
 	
 	@DeleteMapping("/product/{productId}")
-	public ResponseEntity<Object> deleteProduct(Principal principal, @PathVariable Integer productId){
+	public ResponseEntity<Product> deleteProduct(Principal principal, @PathVariable Integer productId){
 //		return null;
 		
 		Optional<UserInfo> user = userRepo.findByUsername(principal.getName()); //seller
-		if(user.isEmpty()) return ResponseEntity.status(404).body("User not found");
+		if(user.isEmpty()) return ResponseEntity.status(404).build();
 		
 		//combo: user_id + product_id
 		Optional<Product> product = productRepo.findBySellerUserIdAndProductId(user.get().getUserId(), productId);
-		if(product.isEmpty()) return ResponseEntity.status(404).body("Product not found");
+		if(product.isEmpty()) return ResponseEntity.status(404).build();
 		
 		productRepo.deleteById(productId);
-		return ResponseEntity.ok().body("Delete from Product Table..");
+		return ResponseEntity.ok().build();
 	}
 }
