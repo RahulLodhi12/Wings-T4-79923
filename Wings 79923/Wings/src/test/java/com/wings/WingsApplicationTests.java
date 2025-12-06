@@ -58,8 +58,9 @@ class WingsApplicationTests {
 	@Test
 	@Order(4)
 	public void productSearchStatus() throws Exception {
+		//test expects the controller method to return any non-null JSON. like List, ResponseEntity<List>, Object
 		mvc.perform(get("/api/public/product/search").param("keyword", "tablet")).andExpect(status().is(200))
-				.andExpect(jsonPath("$", notNullValue()));
+				.andExpect(jsonPath("$", notNullValue()));	
 	}
 
 	@Test
@@ -71,6 +72,7 @@ class WingsApplicationTests {
 @Test
 @Order(6)
 public void productSearchWithProductName() throws Exception {
+//	expects the controller to return: A JSON Array (i.e., a List of Products)
 	MvcResult res = mvc.perform(get("/api/public/product/search").param("keyword", "tablet"))
 			.andExpect(status().is(200))
 			.andReturn();
@@ -91,6 +93,7 @@ public void productSearchWithProductName() throws Exception {
 	@Test
 	@Order(7)
 	public void productSearchWithCategoryName() throws Exception {
+//		expects the controller to return: A JSON Array (i.e., a List of Products)
 		MvcResult res = mvc.perform(get("/api/public/product/search").param("keyword", "medicine"))
 				.andExpect(status().is(200))
 				.andReturn();
@@ -114,8 +117,9 @@ public void productSearchWithProductName() throws Exception {
 	@Test
 	@Order(8)
 	public void consumerLoginWithBadCreds() throws Exception {
-		mvc.perform(post("/api/public/login").contentType(MediaType.APPLICATION_JSON)
-				.content(getJSONCreds(c_u, "password"))).andExpect(status().is(401));
+		mvc.perform(post("/api/public/login").contentType(MediaType.APPLICATION_JSON) //body contains JSON
+				.content(getJSONCreds(c_u, "password"))) //what JSON body is contains (u+p)
+				.andExpect(status().is(401));
 	}
 
 	public String getJSONCreds(String u, String p) {
@@ -128,12 +132,14 @@ public void productSearchWithProductName() throws Exception {
 	public MockHttpServletResponse loginHelper(String u, String p) throws Exception {
 		return mvc
 				.perform(post("/api/public/login").contentType(MediaType.APPLICATION_JSON).content(getJSONCreds(u, p)))
-				.andReturn().getResponse();
+				.andReturn().getResponse(); //returning ["accessToken" : token]
 	}
 
 	@Test
 	@Order(9)
 	public void consumerLoginWithValidCreds() throws Exception {
+//		test does NOT check the JSON structure, the controller return type can be many things 
+//		— as long as the response body is non-empty JSON.
 		assertEquals(200, loginHelper(c_u, p).getStatus());
 		assertNotEquals("", loginHelper(c_u, p).getContentAsString());
 	}
@@ -141,11 +147,11 @@ public void productSearchWithProductName() throws Exception {
 	@Test
 	@Order(10)
 	public void consumerGetCartWithValidJWT() throws Exception {
-
+//		controller MUST return a JSON object: ResponseEntity<Cart> OR Cart OR ResponseEntity<Object>
 		String responseContent = loginHelper(c_u, p).getContentAsString();
 
 		JSONObject jsonResponse = new JSONObject(responseContent);
-		String jwtToken = jsonResponse.getString("accessToken");
+		String jwtToken = jsonResponse.getString("accessToken"); //key-"accessToken", value-token
 
 
 		mvc.perform(get("/api/auth/consumer/cart")
@@ -161,9 +167,9 @@ public void productSearchWithProductName() throws Exception {
 	@Test
 	@Order(11)
 	public void sellerApiWithConsumerJWT() throws Exception {
-		String responseContent = loginHelper(c_u, p).getContentAsString();
+		String responseContent = loginHelper(c_u, p).getContentAsString(); //["accessToken" : token] in String form
 
-		JSONObject jsonResponse = new JSONObject(responseContent);
+		JSONObject jsonResponse = new JSONObject(responseContent); //convert to JSONObject
 		String jwtToken = jsonResponse.getString("accessToken");
 
 
@@ -175,6 +181,8 @@ public void productSearchWithProductName() throws Exception {
 	@Test
 	@Order(12)
 	public void sellerLoginWithValidCreds() throws Exception {
+//		test does NOT check the JSON structure, the controller return type can be many things 
+//		— as long as the response body is non-empty JSON.
 		assertEquals(200, loginHelper(s_u, p).getStatus());
 		assertNotEquals("", loginHelper(s_u, p).getContentAsString());
 	}
@@ -290,7 +298,7 @@ public void productSearchWithProductName() throws Exception {
 		String jwtToken = jsonResponse.getString("accessToken");
 
 
-		String[] arr = createdURI.split("/");
+		String[] arr = createdURI.split("/"); //http://localhost:8000/api/auth/seller/product/3
 		mvc.perform(put("/api/auth/seller/product")	.header("Authorization", "Bearer " +jwtToken)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(getProduct(Integer.parseInt(arr[arr.length - 1]), "iPhone 12", 98000.0, 2, "Electronics")
@@ -326,7 +334,7 @@ public void productSearchWithProductName() throws Exception {
 	@Test
 	@Order(20)
 	public void consumerAddProductToCart() throws Exception {
-
+//		return type can be string OR JSON(Cart)
 		String responseContent = loginHelper(c_u, p).getContentAsString();
 
 		JSONObject jsonResponse = new JSONObject(responseContent);
