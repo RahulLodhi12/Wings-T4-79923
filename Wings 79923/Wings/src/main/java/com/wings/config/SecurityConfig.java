@@ -27,6 +27,7 @@ public class SecurityConfig {
 	@Autowired
 	private UserInfoUserDetailsService userInfoUserDetailsService;
 	
+	@Bean
 	UserDetailsService userDetailsService() {
 		return userInfoUserDetailsService;
 	}
