@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.wings.dto.AuthRequest;
 import com.wings.service.JwtService;
+import com.wings.dto.JwtResponse;
 
 @RestController
 @RequestMapping("/api/public")
@@ -47,11 +48,11 @@ public class LoginController {
 			//3. Generate Token
 			String token = jwtService.generateToken(userDetails.getUsername());
 
-			//Wrap token in a JSON object
-			Map<String, String> response = new HashMap<>();
-			response.put("accessToken", token);
-
-			return ResponseEntity.ok(response);
+			
+			//4. Return the JWT Response
+			JwtResponse jwtResponse = new JwtResponse(token,201);
+			
+			return ResponseEntity.ok(jwtResponse);
 			
 		} 
 		catch (BadCredentialsException e) {
