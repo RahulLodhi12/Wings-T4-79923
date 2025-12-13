@@ -17,8 +17,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+//import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.wings.models.Cart;
 import com.wings.models.Category;
 //import com.wings.models.Category;
 import com.wings.models.Product;
@@ -42,98 +43,172 @@ public class SellerController {
 	
 	@PostMapping("/product")
 	public ResponseEntity<Object> postProduct(Principal principal, @RequestBody Product product){
-	    Optional<UserInfo> user = userRepo.findByUsername(principal.getName());
-	    
-	    Optional<Category> categoryOpt = categoryRepo.findByCategoryName(product.getCategory().getCategoryName());
-	    if(categoryOpt.isEmpty()) {
-	    	Category category = new Category();
-	    	category.setCategoryName(product.getCategory().getCategoryName());
-	    	categoryRepo.save(category);
-	    }
-	    
-	    //categoryOpt.isPresent()
-	    product.setCategory(categoryOpt.get()); 
-	    product.setPrice(product.getPrice());
-	    product.setProductId(product.getProductId());
-	    product.setProductName(product.getProductName());
-	    product.setSeller(user.get());
-
-	    Product savedProduct = productRepo.save(product);
-
-//	    URI location = ServletUriComponentsBuilder
-//	            .fromCurrentContextPath()
-//	            .path("/api/auth/seller/product/{productId}")
-//	            .buildAndExpand(product.getProductId())
-//	            .toUri();
-//	    ----------------OR--------------
-	    String location = "http://localhost:8000/api/auth/seller/product/" + savedProduct.getProductId();
-
-
-//	    return ResponseEntity.created(URI.create(location)).body(savedProduct);
-//	    --------------OR---------------
-	    return ResponseEntity
-	            .status(201)             // Set HTTP 201 Created
-	            .header("Location", location)  // Set Location header
-	            .body(savedProduct);     // Include the saved product in body
-	    
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("SELLER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	Optional<Category> catOpt = categoryRepo.findByCategoryName(product.getCategory().getCategoryName());
+        	
+        	product.setCategory(catOpt.get());
+        	product.setSeller(userInfo.get());
+        	
+        	Product savedProduct = productRepo.save(product);
+        	
+        	String location = "http://localhost:8000/api/auth/seller/product/" + savedProduct.getProductId();
+        	
+        	
+        	return ResponseEntity.created(URI.create(location)).body(savedProduct);
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body(e.getMessage());
+		}
 	}
 	
 	@GetMapping("/product")
-	public ResponseEntity<Object> getAllProducts(Principal principal){		
-		Optional<UserInfo> user = userRepo.findByUsername(principal.getName()); //seller
-		
-		return ResponseEntity.ok(productRepo.findBySellerUserId(user.get().getUserId()));
+	public ResponseEntity<Object> getAllProducts(Principal principal){	
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("SELLER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	List<Product> list = productRepo.findBySellerUserId(userInfo.get().getUserId());
+        	
+        	return ResponseEntity.ok(list);
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body(e.getMessage());
+		}
 	}
 	
 	@GetMapping("/product/{productId}")
 	public ResponseEntity<Object> getProduct(Principal principal, @PathVariable Integer productId){
-		Optional<UserInfo> user = userRepo.findByUsername(principal.getName()); //seller
-		
-		//combo: user_id + product_id
-		Optional<Product> product = productRepo.findBySellerUserIdAndProductId(user.get().getUserId(), productId);
-		
-		if (product.isPresent()) {
-		    return ResponseEntity.ok(product.get());
-		} else {
-		    return ResponseEntity.status(404).build();
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("SELLER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	Optional<Product> prodOpt = productRepo.findBySellerUserIdAndProductId(userInfo.get().getUserId(), productId);
+        	if(prodOpt.isEmpty()) {
+        		return ResponseEntity.status(404).body(null);
+        	}
+        	
+        	return ResponseEntity.ok(prodOpt.get());
+        	
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body(e.getMessage());
 		}
+		
 	}
 	
 	@PutMapping("/product")
 	public ResponseEntity<Object> putProduct(Principal principal, @RequestBody Product updatedProduct){
-		Optional<UserInfo> user = userRepo.findByUsername(principal.getName()); //seller
-	
-		//combo: user_id + product_id
-		Optional<Product> product = productRepo.findBySellerUserIdAndProductId(user.get().getUserId(), updatedProduct.getProductId());
-		if(product.isEmpty()) return ResponseEntity.status(404).body("Product not found");
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("SELLER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	Optional<Product> prodOpt = productRepo.findById(updatedProduct.getProductId());
+        	if(prodOpt.isEmpty()) {
+        		return ResponseEntity.status(404).body(null);
+        	}
+        	
+        	Optional<Category> catOpt = categoryRepo.findByCategoryName(updatedProduct.getCategory().getCategoryName());
+        	
+        	updatedProduct.setCategory(catOpt.get());
+        	updatedProduct.setSeller(userInfo.get());
+        	
+        	Product savedProduct = productRepo.save(updatedProduct);
+        	
+        	return ResponseEntity.ok(savedProduct);
+        	
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body(e.getMessage());
+		}
 		
-		Optional<Category> categoryOpt = categoryRepo.findByCategoryName(updatedProduct.getCategory().getCategoryName());
-	    if(categoryOpt.isEmpty()) {
-	    	Category category = new Category();
-	    	category.setCategoryName(updatedProduct.getCategory().getCategoryName());
-	    	categoryRepo.save(category);
-	    }
-	
-		product.get().setCategory(categoryOpt.get());
-		product.get().setPrice(updatedProduct.getPrice());
-		product.get().setProductId(updatedProduct.getProductId());
-		product.get().setProductName(updatedProduct.getProductName());
-		product.get().setSeller(updatedProduct.getSeller());
-		
-		productRepo.save(product.get());
-		
-		return ResponseEntity.ok().body("Updated..");	
 	}
 	
 	@DeleteMapping("/product/{productId}")
 	public ResponseEntity<Product> deleteProduct(Principal principal, @PathVariable Integer productId){
-		Optional<UserInfo> user = userRepo.findByUsername(principal.getName()); //seller
-		
-		//combo: user_id + product_id
-		Optional<Product> product = productRepo.findBySellerUserIdAndProductId(user.get().getUserId(), productId);
-		
-		productRepo.deleteById(productId);
-		
-		return ResponseEntity.ok().build();
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body(null);
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("SELLER")) {
+        		return ResponseEntity.status(403).body(null);
+        	}
+        	
+        	//Logic
+        	Optional<Product> prodOpt = productRepo.findBySellerUserIdAndProductId(userInfo.get().getUserId(), productId);
+        	if(prodOpt.isEmpty()) {
+        		return ResponseEntity.status(404).body(null);
+        	}
+        	
+        	productRepo.delete(prodOpt.get());
+        	
+        	return ResponseEntity.ok().build();
+        	
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body(null);
+		}
 	}
 }

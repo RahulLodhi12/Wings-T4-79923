@@ -16,6 +16,7 @@ public class UserInfoUserDetails implements UserDetails {
 	private static final long serialVersionUID = 4122757742427151539L;
 	private UserInfo userInfo;
 	
+	//set via constructor
 	public UserInfoUserDetails(UserInfo userInfo) {
 		this.userInfo = userInfo;
 	}

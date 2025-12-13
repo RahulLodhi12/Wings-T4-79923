@@ -23,6 +23,7 @@ import com.wings.repository.CartProductRepo;
 import com.wings.repository.CartRepo;
 import com.wings.repository.ProductRepo;
 import com.wings.repository.UserInfoRepository;
+//import com.wings1SS5.model.UserModel;
 
 @RestController
 @RequestMapping("/api/auth/consumer")
@@ -42,65 +43,178 @@ public class ConsumerController {
 	
 	@GetMapping("/cart")
 	public ResponseEntity<Object> getCart(Principal principal){
-		Optional<Cart> cart = cartRepo.findByUserUsername(principal.getName());
-		if (cart.isPresent()) {
-			return ResponseEntity.ok(cart.get());
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("CONSUMER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	Optional<Cart> cartOpt = cartRepo.findByUserUsername(username);
+        	
+        	if(cartOpt.isEmpty()) {
+        		return ResponseEntity.status(404).body("not found");
+        	}
+        	
+        	return ResponseEntity.status(200).body(cartOpt.get());
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body("Internal Server error");
 		}
-		return ResponseEntity.notFound().build();
 	}
 	
 	@PostMapping("/cart")
 	public ResponseEntity<Object> postCart(Principal principal, @RequestBody Product product) {
-		Optional<Cart> cartOpt = cartRepo.findByUserUsername(principal.getName());
+		try {
+			System.out.println("1");
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("CONSUMER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	//Check - duplicates
+        	Optional<CartProduct> cpOpt = cpRepo.findByCartUserUserIdAndProductProductId(userInfo.get().getUserId(), product.getProductId());
+        	System.out.println("2");
+        	if(cpOpt.isPresent()) {
+        		return ResponseEntity.status(409).body("product already present");
+        	}
+        	
+        	Optional<Cart> cartOpt = cartRepo.findByUserUsername(username);
+        	System.out.println("3");
+        	//cart exist
+        	if(cartOpt.isPresent()) {
+        		CartProduct cp = new CartProduct();
+        		cp.setCart(cartOpt.get());
+        		cp.setProduct(product);
+        		cp.setQuantity(1);
+        		        	
+        		CartProduct savedCp = cpRepo.save(cp);
 
-		if (cartOpt.isPresent()) {
+        		return ResponseEntity.status(200).body(savedCp);
+        		
+        	} //cart not exist -> don't have test case for this
+        	else {
+        		
+        		Cart newCart = new Cart();
+        		newCart.setUser(userInfo.get());
+        		newCart.setTotalAmount(product.getPrice());
+
+        		Cart savedCart = cartRepo.save(newCart); // ✅ save first
+
+        		CartProduct cp = new CartProduct();
+        		cp.setCart(savedCart);
+        		cp.setProduct(product);
+        		cp.setQuantity(1);
+
+        		CartProduct savedCp = cpRepo.save(cp);
+        		
+        		return ResponseEntity.status(200).body(savedCp);
+        	}
 			
-			// check duplicate - user + product
-			Optional<CartProduct> cpExist = cpRepo.findByCartUserUserIdAndProductProductId(cartOpt.get().getCartId(),
-					product.getProductId());
-			if (cpExist.isPresent()) {
-				return ResponseEntity.status(409).body("Product already exist in Cart");
-			}
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body("Internal Server error");
 		}
 		
-		CartProduct cp = new CartProduct();
-		
-		cp.setCart(cartOpt.get());
-		cp.setProduct(product);
-		cp.setQuantity(1);
-		cpRepo.save(cp);
-
-		return ResponseEntity.status(200).body("Product added to cart");
 	}
 	
 	@PutMapping("/cart")
 	public ResponseEntity<Object> putCart(Principal principal, @RequestBody CartProduct cp){
-		Optional<Cart> cartOpt = cartRepo.findByUserUsername(principal.getName());
-
-	    Cart cart = cartOpt.get();
-
-	    // Find existing CartProduct for this user + product
-	    Optional<CartProduct> cpExist = cpRepo.findByCartUserUserIdAndProductProductId(
-	            cart.getCartId(), cp.getProduct().getProductId());
-
-	    if (cp.getQuantity() == 0) {
-	    	cpRepo.delete(cpExist.get());
-	    	return ResponseEntity.ok("Product removed from cart");
-	    }
-	    
-	    cpExist.get().setQuantity(cp.getQuantity());
-	    cpRepo.save(cpExist.get());
-	    return ResponseEntity.ok("Cart updated");
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("CONSUMER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	Optional<CartProduct> cpOpt = cpRepo.findByCartUserUserIdAndProductProductId(userInfo.get().getUserId(), cp.getProduct().getProductId());
+        	
+        	if(cpOpt.isEmpty()) {
+        		
+        		Optional<Cart> cartOpt = cartRepo.findByUserUsername(username);
+        		
+        		CartProduct cproduct = new CartProduct();
+        		cproduct.setCart(cartOpt.get());
+        		cproduct.setProduct(cp.getProduct());
+        		cproduct.setQuantity(cp.getQuantity());
+        		
+        		cpRepo.save(cproduct);
+        		
+        		return ResponseEntity.status(200).body("updated");
+        	}
+        	
+        	if(cp.getQuantity()==0) {
+        		cpRepo.delete(cpOpt.get());
+        		return ResponseEntity.status(200).body("updated..55");
+        	}
+        	
+        	cpOpt.get().setQuantity(cp.getQuantity());
+        	cpRepo.save(cpOpt.get());
+        	return ResponseEntity.status(200).body("updated..22");
+        	
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body("Internal Server error");
+		}
 
 	}
 	
 	@DeleteMapping("/cart")
 	public ResponseEntity<Object> deleteCart(Principal principal, @RequestBody Product product){
-		Optional<UserInfo> user = userRepo.findByUsername(principal.getName());
-		
-		//combo -> user_id + product_id
-		cpRepo.deleteByCartUserUserIdAndProductProductId(user.get().getUserId(), product.getProductId());
-		return ResponseEntity.ok("Product removed from cart");
+		try {
+			
+			String username = principal.getName();
+        	
+        	Optional<UserInfo> userInfo = userRepo.findByUsername(username);
+        	
+        	//Sanity Check #1 -> check user null or not
+        	if(userInfo.isEmpty()) {
+        		return ResponseEntity.status(404).body("User not found");
+        	}
+        	
+        	//Sanity Check #2 -> check role
+        	if(!userInfo.get().getRoles().equals("CONSUMER")) {
+        		return ResponseEntity.status(403).body("You don't have access");
+        	}
+        	
+        	//Logic
+        	cpRepo.deleteByCartUserUserIdAndProductProductId(userInfo.get().getUserId(), product.getProductId());
+        	
+        	return ResponseEntity.status(200).body("deleted..");
+        	
+			
+		} catch(Exception e) {
+			return ResponseEntity.status(500).body("Internal Server error");
+		}
 	}
 }
 
