@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
+import com.wings.controller.CustomUsernameNotFoundException;
 import com.wings.models.UserInfo;
 import com.wings.repository.UserInfoRepository;
 
@@ -55,11 +56,16 @@ public class UserInfoUserDetailsService implements UserDetailsService {
 		Optional<UserInfo> user = repo.findByUsername(username);
 		
 		if(user.isEmpty()) {
+			
 			throw new UsernameNotFoundException("user not found");
 		}
 		
 		return new UserInfoUserDetails(user.get());
 		
+	}
+	
+	public void testMethod() throws CustomUsernameNotFoundException {
+		throw new CustomUsernameNotFoundException("cc user not found");
 	}
 	
 }

@@ -16,4 +16,6 @@ public interface ProductRepo extends JpaRepository<Product, Integer> {
 	List<Product> findBySellerUserId(Integer sellerId);
 
 	Optional<Product> findBySellerUserIdAndProductId(Integer sellerId, Integer productId);
+	
+//	List<Product> findTop3ByCategoryOrderByPrice();
 }
