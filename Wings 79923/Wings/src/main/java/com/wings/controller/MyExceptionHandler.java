@@ -14,7 +14,7 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(UsernameNotFoundException.class)
 	public ResponseEntity<?> handleUserNotFoundException(Exception ex) {
 		System.out.println("chutiye : " + ex.getMessage());
-		return ResponseEntity.status(404).body("chutiye : " + ex.getMessage());
+		return ResponseEntity.status(421).body("chutiye : " + ex.getMessage());
 	}
 	
 	

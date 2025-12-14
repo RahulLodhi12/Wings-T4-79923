@@ -70,6 +70,7 @@ import jakarta.servlet.http.HttpServletResponse;
 //
 //}
 
+
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter{
 
@@ -83,7 +84,8 @@ public class JwtAuthFilter extends OncePerRequestFilter{
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		
+	
+		//1.
 		String authHeader = request.getHeader("Authorization");
 		String token=null;
 		String username=null;
@@ -93,24 +95,25 @@ public class JwtAuthFilter extends OncePerRequestFilter{
 			username = jwtService.extractUsername(token);
 		}
 		
-		
+		//2.
 		if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null) {
 			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 			
 			if(jwtService.validateToken(token, userDetails)) {
-				//create -> set -> set
-				
+				//create
 				UsernamePasswordAuthenticationToken authObj = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 				
+				//set - web
 				authObj.setDetails(new WebAuthenticationDetails(request));
 				
+				//set
 				SecurityContextHolder.getContext().setAuthentication(authObj);
-				
 			}
 		}
 		
-		
+		//3.
 		filterChain.doFilter(request, response);
+		
 		
 	}
 	

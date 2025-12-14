@@ -16,50 +16,92 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.wings.config.UserInfoUserDetailsService;
 import com.wings.dto.AuthRequest;
 import com.wings.service.JwtService;
 import com.wings.dto.JwtResponse;
 
+//@RestController
+//@RequestMapping("/api/public")
+//public class LoginController {
+//	
+//	@Autowired
+//	private JwtService jwtService;
+//	
+//	@Autowired
+//	private AuthenticationManager authenticationManager;
+//	
+//	@Autowired
+//	UserDetailsService userDetailsService;
+//	
+//	@PostMapping("/login")
+//	public ResponseEntity<Object> authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+////		Object or ? are generic type means any data-type 
+//
+//		try {
+//			//1. Fetch User by username - This don't validate the password
+//			UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
+//			
+//			//2. Validation of username + password
+//			UsernamePasswordAuthenticationToken authTokenObject = new UsernamePasswordAuthenticationToken(authRequest.getUsername(),authRequest.getPassword());
+//			authenticationManager.authenticate(authTokenObject);
+//			
+//			//3. Generate Token
+//			String token = jwtService.generateToken(userDetails.getUsername());
+//
+//			
+//			//4. Return the JWT Response
+//			JwtResponse jwtResponse = new JwtResponse(token,201);
+//			
+//			return ResponseEntity.ok(jwtResponse);
+//			
+//		} 
+//		catch (BadCredentialsException e) {
+//			
+//			return ResponseEntity.status(401).body("Invalid username or password");
+//		}
+//
+//	}
+//	
+//}
+
 @RestController
 @RequestMapping("/api/public")
-public class LoginController {
+public class LoginController{
 	
 	@Autowired
-	private JwtService jwtService;
+	JwtService jwtService;
 	
 	@Autowired
-	private AuthenticationManager authenticationManager;
+	UserInfoUserDetailsService userDetailsService;
 	
 	@Autowired
-	UserDetailsService userDetailsService;
+	AuthenticationManager authenticationManager;
 	
 	@PostMapping("/login")
-	public ResponseEntity<Object> authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
-//		Object or ? are generic type means any data-type 
-
+	public ResponseEntity<?> loginMethod(@RequestBody AuthRequest authRequest) {
 		try {
-			//1. Fetch User by username - This don't validate the password
+			
+			//1
 			UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
 			
-			//2. Validation of username + password
-			UsernamePasswordAuthenticationToken authTokenObject = new UsernamePasswordAuthenticationToken(authRequest.getUsername(),authRequest.getPassword());
-			authenticationManager.authenticate(authTokenObject);
+			//2.
+			UsernamePasswordAuthenticationToken authObj = new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword());
+
+			authenticationManager.authenticate(authObj); //validate username + password
 			
-			//3. Generate Token
+			//3.
 			String token = jwtService.generateToken(userDetails.getUsername());
-
 			
-			//4. Return the JWT Response
-			JwtResponse jwtResponse = new JwtResponse(token,201);
+			//4
+			JwtResponse jwt = new JwtResponse(token,200);
 			
-			return ResponseEntity.ok(jwtResponse);
+			return ResponseEntity.ok(jwt);
 			
-		} 
-		catch (BadCredentialsException e) {
-			
-			return ResponseEntity.status(401).body("Invalid username or password");
+		}catch(BadCredentialsException e) {
+			return ResponseEntity.status(401).body("invalid u p");
 		}
-
 	}
+	
 	
 }

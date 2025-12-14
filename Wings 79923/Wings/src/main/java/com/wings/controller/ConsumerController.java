@@ -36,7 +36,7 @@ public class ConsumerController {
 	CartRepo cartRepo;
 	
 	@Autowired
-	CartProductRepo cpRepo;
+	CartProductRepo cpRepo; //CartProduct means Cart mein Product
 	
 	@Autowired
 	UserInfoRepository userRepo;
@@ -161,13 +161,14 @@ public class ConsumerController {
         	if(cpOpt.isEmpty()) {
         		
         		Optional<Cart> cartOpt = cartRepo.findByUserUsername(username);
+        		Optional<Product> prodOpt = productRepo.findById(cp.getProduct().getProductId());
         		
-        		CartProduct cproduct = new CartProduct();
-        		cproduct.setCart(cartOpt.get());
-        		cproduct.setProduct(cp.getProduct());
-        		cproduct.setQuantity(cp.getQuantity());
+        		CartProduct cpp = new CartProduct();
+        		cpp.setCart(cartOpt.get());
+        		cpp.setProduct(prodOpt.get());
+        		cpp.setQuantity(cp.getQuantity());
         		
-        		cpRepo.save(cproduct);
+        		cpRepo.save(cpp);
         		
         		return ResponseEntity.status(200).body("updated");
         	}

@@ -123,15 +123,15 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtService{
+
+	public final static String secretKey = "IamASecretKeyIamASecretKeyIamASecretKeyIamASecretKey";
+	public final static long EXP = 24*60*60*1000l;
 	
-	public final static String SecretKey = "IamSecretKeyIamSecretKeyIamSecretKeyIamSecretKeyIamSecretKeyIamSecretKey";
-	
-	public final static Long EXP = 24*60*60*1000l;
-	
+	//1.
 	public Claims extractAllClaims(String token) {
 		return Jwts
 				.parser()
-				.setSigningKey(SecretKey)
+				.setSigningKey(secretKey)
 				.parseClaimsJws(token)
 				.getBody();
 	}
@@ -146,10 +146,11 @@ public class JwtService{
 		return claims.getExpiration();
 	}
 	
+	//2.
 	public String generateToken(String username) {
 		return Jwts
 				.builder()
-				.signWith(SignatureAlgorithm.HS256, SecretKey)
+				.signWith(SignatureAlgorithm.HS256, secretKey)
 				.addClaims(new HashMap<>())
 				.setSubject(username)
 				.setIssuedAt(new Date(System.currentTimeMillis()))
@@ -157,13 +158,16 @@ public class JwtService{
 				.compact();
 	}
 	
+	//3.
 	public boolean validateToken(String token, UserDetails user) {
 		String username = extractUsername(token);
 		Date expiration = extractExpiration(token);
 		
 		return username.equals(user.getUsername()) && expiration.after(new Date(System.currentTimeMillis()));
 	}
+	
 }
+
 
 
 

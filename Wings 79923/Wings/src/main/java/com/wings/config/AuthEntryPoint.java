@@ -10,6 +10,21 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+//@Component
+//public class AuthEntryPoint implements AuthenticationEntryPoint{
+//
+//	@Override
+//	public void commence(HttpServletRequest request, HttpServletResponse response,
+//			AuthenticationException authException) throws IOException, ServletException {
+//		// TODO Auto-generated method stub
+//		
+//		response.setStatus(401);
+//		response.getWriter().write("This calls when we send request without token..");
+//		
+//	}
+//
+//}
+
 @Component
 public class AuthEntryPoint implements AuthenticationEntryPoint{
 
@@ -19,8 +34,8 @@ public class AuthEntryPoint implements AuthenticationEntryPoint{
 		// TODO Auto-generated method stub
 		
 		response.setStatus(401);
-		response.getWriter().write("This calls when we send request without token..");
+		response.getWriter().write("This calls when we send request without token");
 		
 	}
-
+	
 }

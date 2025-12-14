@@ -69,7 +69,6 @@ public class SellerController {
         	
         	String location = "http://localhost:8000/api/auth/seller/product/" + savedProduct.getProductId();
         	
-        	
         	return ResponseEntity.created(URI.create(location)).body(savedProduct);
 			
 		} catch(Exception e) {

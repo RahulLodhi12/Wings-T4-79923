@@ -42,30 +42,25 @@ import com.wings.repository.UserInfoRepository;
 //
 //}
 
+
 @Component
-public class UserInfoUserDetailsService implements UserDetailsService {
+public class UserInfoUserDetailsService implements UserDetailsService{
 
 	@Autowired
-	UserInfoRepository repo;
+	UserInfoRepository userInfoRepository;
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		// TODO Auto-generated method stub
 //		return null;
 		
-		Optional<UserInfo> user = repo.findByUsername(username);
+		Optional<UserInfo> userInfo = userInfoRepository.findByUsername(username);
 		
-		if(user.isEmpty()) {
-			
+		if(userInfo.isEmpty()) {
 			throw new UsernameNotFoundException("user not found");
 		}
 		
-		return new UserInfoUserDetails(user.get());
-		
-	}
-	
-	public void testMethod() throws CustomUsernameNotFoundException {
-		throw new CustomUsernameNotFoundException("cc user not found");
+		return new UserInfoUserDetails(userInfo.get());
 	}
 	
 }

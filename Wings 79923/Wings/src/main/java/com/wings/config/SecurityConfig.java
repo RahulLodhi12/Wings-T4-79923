@@ -96,22 +96,17 @@ import com.wings.filter.JwtAuthFilter;
 //
 //}
 
-@Component
-public class SecurityConfig {
-	
-	@Autowired
-	JwtAuthFilter authFilter;
-	
-	@Autowired
-	UserInfoUserDetailsService userInfoUserDetailsService;
-	
-	@Bean
-	UserDetailsService userDetailsService() {
-		return userInfoUserDetailsService;
-	}
+@Configuration
+public class SecurityConfig{
 	
 	@Autowired
 	AuthEntryPoint authEntryPoint;
+	
+	@Autowired
+	JwtAuthFilter jwtAuthFilter;
+	
+	@Autowired
+	UserInfoUserDetailsService userDetailsService;
 	
 	@Bean
 	WebSecurityCustomizer webSecurityCustomizer() {
@@ -121,13 +116,13 @@ public class SecurityConfig {
 	}
 	
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		
 		http.csrf(csrf -> csrf.disable());
 		
 		http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 		
-		http.addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 		
 		http.authenticationProvider(authenticationProvider());
 		
@@ -135,35 +130,29 @@ public class SecurityConfig {
 				.requestMatchers("/api/public/**").permitAll()
 				.requestMatchers("/api/auth/consumer/**").hasAuthority("CONSUMER")
 				.requestMatchers("/api/auth/seller/**").hasAuthority("SELLER")
-				.anyRequest().authenticated()
-				);
+				.anyRequest().authenticated());
 		
-		
-		http.exceptionHandling(ex->ex.authenticationEntryPoint(authEntryPoint));
+		http.exceptionHandling(ex -> ex.authenticationEntryPoint(authEntryPoint));
 		
 		return http.build();
 	}
 	
-	
 	@Bean
 	PasswordEncoder passwordEncoder() {
-//		return new BCryptPasswordEncoder();
-		return NoOpPasswordEncoder.getInstance();
+		return new BCryptPasswordEncoder();
 	}
 	
 	@Bean
 	AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-		provider.setUserDetailsService(userDetailsService());
+		provider.setUserDetailsService(userDetailsService);
 		provider.setPasswordEncoder(passwordEncoder());
 		return provider;
 	}
-	
 	
 	@Bean
 	AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 		return config.getAuthenticationManager();
 	}
-	
 }
 
