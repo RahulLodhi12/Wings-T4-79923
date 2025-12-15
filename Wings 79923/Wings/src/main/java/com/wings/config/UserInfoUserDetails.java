@@ -17,13 +17,13 @@ public class UserInfoUserDetails implements UserDetails {
 	private UserInfo userInfo;
 	
 	//set via constructor
-	public UserInfoUserDetails(UserInfo userInfo) {
+	public UserInfoUserDetails(UserInfo userInfo) { //not given
 		this.userInfo = userInfo;
 	}
 	
-	public UserInfo getUserInfo() {
-		return userInfo;
-	}
+//	public UserInfo getUserInfo() {
+//		return userInfo;
+//	}
 	
 	private String name;
 	private String password;
@@ -37,7 +37,7 @@ public class UserInfoUserDetails implements UserDetails {
 
 	@Override
 	public String getPassword() {
-		return userInfo.getPassword();
+		return userInfo.getPassword(); //i miss this thing -> userInfo.getPassword();
 	}
 
 	@Override
