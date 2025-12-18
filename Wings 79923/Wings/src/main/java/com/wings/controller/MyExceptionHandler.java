@@ -24,3 +24,14 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(420).body("again chutiye : " + ex.getMessage());
 	}
 }
+
+/*
+@RestController
+public class TestController {
+
+    @GetMapping("/test")
+    public String testException() {
+        throw new CustomUsernameNotFoundException("Something went wrong!");
+    }
+}
+*/
